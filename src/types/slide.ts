@@ -12,6 +12,7 @@ export interface SlideData {
   html: string
   frontmatter: SlideFrontmatter
   rawMarkdown: string
+  notes?: string
 }
 
 export interface PresentationMeta {

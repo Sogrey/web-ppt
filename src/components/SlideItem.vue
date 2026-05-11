@@ -2,11 +2,14 @@
 import type { SlideData } from '@/types/slide'
 
 const props = defineProps<{ slide: SlideData }>()
+
+const layout = props.slide.frontmatter.layout ?? 'default'
 </script>
 
 <template>
   <section
     class="slide-item"
+    :class="`layout-${layout}`"
     :style="props.slide.frontmatter.background
       ? { background: props.slide.frontmatter.background }
       : {}"
@@ -25,17 +28,15 @@ const props = defineProps<{ slide: SlideData }>()
 </template>
 
 <style scoped>
+/* ── 通用基础 ── */
 .slide-item {
   width: 100vw;
   height: 100vh;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 60px 72px;
   position: relative;
   overflow: hidden;
-  background: var(--bg, #0b0d0f);
+  background: var(--bg);
 }
 
 .grid-bg {
@@ -55,25 +56,88 @@ const props = defineProps<{ slide: SlideData }>()
   font-family: 'DM Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.15em;
-  color: var(--dim, #4a525c);
+  color: var(--dim);
   text-transform: uppercase;
 }
 
 .slide-content {
   position: relative;
-  max-width: 900px;
-  width: 100%;
   z-index: 1;
-  color: var(--text, #f7f8fa);
+  color: var(--text);
 }
 
-/* ── Markdown 内容样式 ── */
+/* ── 布局：default（默认单栏居中） ── */
+.layout-default {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.layout-default .slide-content {
+  max-width: 900px;
+  width: 100%;
+}
+
+/* ── 布局：cover（封面页，大标题居中） ── */
+.layout-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.layout-cover .slide-content {
+  max-width: 1100px;
+  width: 100%;
+}
+.layout-cover .slide-content :deep(h1) {
+  font-size: clamp(52px, 7vw, 96px);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  margin-bottom: 24px;
+}
+.layout-cover .slide-content :deep(p) {
+  font-size: clamp(16px, 2vw, 24px);
+  font-weight: 300;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+/* ── 布局：two-col（双栏） ── */
+.layout-two-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+}
+.layout-two-col .slide-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  max-width: 1200px;
+  width: 100%;
+  align-items: start;
+}
+.layout-two-col .slide-content :deep(h2) {
+  grid-column: 1 / -1;
+}
+
+/* ── 布局：blank（空白自由布局） ── */
+.layout-blank {
+  /* 不设置 align-items/justify-content，内容自由定位 */
+  padding: 0;
+}
+.layout-blank .slide-content {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Markdown 内容样式（通用） ── */
 .slide-content :deep(h1) {
   font-size: clamp(36px, 5vw, 68px);
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: -0.03em;
-  color: var(--text, #f7f8fa);
+  color: var(--text);
   margin-bottom: 28px;
 }
 
@@ -82,21 +146,21 @@ const props = defineProps<{ slide: SlideData }>()
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: var(--text, #f7f8fa);
+  color: var(--text);
   margin-bottom: 20px;
 }
 
 .slide-content :deep(h3) {
   font-size: clamp(16px, 2vw, 24px);
   font-weight: 700;
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
   margin-bottom: 14px;
 }
 
 .slide-content :deep(p) {
   font-size: clamp(14px, 1.6vw, 20px);
   font-weight: 300;
-  color: var(--muted, #a9b0ba);
+  color: var(--muted);
   line-height: 1.75;
   margin-bottom: 16px;
 }
@@ -104,7 +168,7 @@ const props = defineProps<{ slide: SlideData }>()
 .slide-content :deep(ul),
 .slide-content :deep(ol) {
   font-size: clamp(13px, 1.5vw, 18px);
-  color: var(--muted, #a9b0ba);
+  color: var(--muted);
   line-height: 1.8;
   padding-left: 1.5em;
   margin-bottom: 16px;
@@ -115,12 +179,12 @@ const props = defineProps<{ slide: SlideData }>()
 }
 
 .slide-content :deep(strong) {
-  color: var(--text, #f7f8fa);
+  color: var(--text);
   font-weight: 700;
 }
 
 .slide-content :deep(em) {
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
   font-style: normal;
 }
 
@@ -128,7 +192,7 @@ const props = defineProps<{ slide: SlideData }>()
   font-family: 'DM Mono', monospace;
   font-size: 0.875em;
   background: var(--bg3, #1c2026);
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
   padding: 2px 8px;
   border-radius: 3px;
 }
@@ -147,7 +211,7 @@ const props = defineProps<{ slide: SlideData }>()
   background: none;
   padding: 0;
   font-size: 14px;
-  color: var(--text, #f7f8fa);
+  color: var(--text);
   white-space: pre;
 }
 
@@ -155,7 +219,7 @@ const props = defineProps<{ slide: SlideData }>()
   border-left: 3px solid var(--accent, #58e1c1);
   background: rgba(88, 225, 193, 0.05);
   padding: 12px 20px;
-  color: var(--muted, #a9b0ba);
+  color: var(--muted);
   margin-bottom: 16px;
 }
 
@@ -168,7 +232,7 @@ const props = defineProps<{ slide: SlideData }>()
 
 .slide-content :deep(th) {
   background: var(--bg2, #13161a);
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
   font-weight: 600;
   text-align: left;
   padding: 10px 16px;
@@ -178,7 +242,7 @@ const props = defineProps<{ slide: SlideData }>()
 .slide-content :deep(td) {
   padding: 10px 16px;
   border-bottom: 1px solid var(--border, rgba(255, 255, 255, 0.07));
-  color: var(--muted, #a9b0ba);
+  color: var(--muted);
 }
 
 .slide-content :deep(img) {
@@ -195,7 +259,7 @@ const props = defineProps<{ slide: SlideData }>()
 }
 
 .slide-content :deep(a) {
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -205,7 +269,7 @@ const props = defineProps<{ slide: SlideData }>()
 
 /* ── KaTeX 公式样式 ── */
 .slide-content :deep(.katex) {
-  color: var(--text, #f7f8fa);
+  color: var(--text);
   font-size: 1.1em;
 }
 
@@ -220,11 +284,14 @@ const props = defineProps<{ slide: SlideData }>()
   font-family: 'DM Mono', monospace;
 }
 
-/* 移动端 */
+/* ── 移动端适配 ── */
 @media (max-width: 768px) {
   .slide-item {
     padding: 64px 24px 48px;
-    align-items: flex-start;
+  }
+  .slide-item.layout-two-col .slide-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
   }
   .screen-label {
     left: 24px;

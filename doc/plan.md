@@ -191,35 +191,36 @@ flowchart TD
 
 ### Phase 1：基础可运行（MVP）
 
-- [ ] 安装 `marked`、`gray-matter`
-- [ ] 实现 `useSlideParser`：MD → `SlideData[]`
-- [ ] 实现 `slideStore`（Pinia）
-- [ ] 实现 `PresentationView`：横向 track + CSS 过渡
-- [ ] 实现 `SlideItem`：渲染 `v-html`
-- [ ] 实现 `NavDots`：右侧圆点，点击跳转
-- [ ] 实现 `ProgressBar`：底部进度条
-- [ ] 实现 `useSlideNav`：键盘 + 滚轮 + 触摸
-- [ ] 写 `demo.md` 示例文稿，验证分页
+- [x] 安装 `marked`、`front-matter`
+- [x] 实现 `useSlideParser`：MD → `SlideData[]`
+- [x] 实现 `slideStore`（Pinia）
+- [x] 实现 `PresentationView`：横向 track + CSS 过渡
+- [x] 实现 `SlideItem`：渲染 `v-html`
+- [x] 实现 `NavDots`：右侧圆点，点击跳转
+- [x] 实现 `ProgressBar`：底部进度条
+- [x] 实现 `useSlideNav`：键盘 + 滚轮 + 触摸
+- [x] 写 `demo.md` 示例文稿，验证分页
 
 ### Phase 2：布局系统
 
-- [ ] 支持 frontmatter `layout` 字段
-- [ ] 内置 `cover`、`default`、`two-col` 三种布局组件
-- [ ] `SlideItem` 根据 `layout` 动态渲染对应布局
+- [x] 支持 frontmatter `layout` 字段
+- [x] 内置 `cover`、`default`、`two-col`、`blank` 四种布局
+- [x] `SlideItem` 根据 `layout` 动态渲染对应布局
 
 ### Phase 3：主题与样式
 
-- [ ] CSS 变量主题系统（对标 `tmp/index.html` 的 `:root` 变量）
-- [ ] 内置 dark 主题（`--bg`、`--text`、`--accent`）
-- [ ] 支持每页自定义背景色
+- [x] CSS 变量主题系统（对标 `tmp/index.html` 的 `:root` 变量）
+- [x] 内置 dark 主题（`--bg`、`--text`、`--accent`）
+- [x] 支持每页自定义背景色
 
 ### Phase 4：功能增强（可选）
 
-- [ ] 代码块语法高亮（highlight.js）
-- [ ] 演讲者备注（`<!-- notes: ... -->`）
-- [ ] 全屏 API
-- [ ] URL hash 同步（`#/3` 直接跳转第 3 页）
-- [ ] 打印/导出 PDF 模式
+- [x] 代码块语法高亮（highlight.js）
+- [x] 数学公式渲染（KaTeX）
+- [x] 演讲者备注（`<!-- notes: ... -->`）
+- [x] 全屏 API
+- [x] URL hash 同步（`#/3` 直接跳转第 3 页）
+- [x] 打印/导出 PDF 模式
 
 ---
 
@@ -280,3 +281,26 @@ const hello = () => console.log('Hello, PPT!')
 - [marked.js 文档](https://marked.js.org/)
 - [gray-matter](https://github.com/jonschlinkert/gray-matter)
 - [Slidev 源码](https://github.com/slidevjs/slidev)（参考思路，不引入）
+
+---
+
+## 八、更新日志
+
+### 2026-05-11
+- ✅ **修复 PDF 导出多页问题**：PDF 导出只有首页的原因是企业 Vue scoped CSS（`data-v-xxxx`）优先级高于 `@media print` 规则。解决方案：
+  - `print.css` 所有规则加 `!important`
+  - `handlePrint()` 中用 JS `element.style.cssText` 注入最高优先级 inline 样式
+  - 监听 `afterprint` 事件恢复样式
+- ✅ 确认 Phase 4「打印/导出 PDF 模式」已完成
+- 清理 `App.vue` 中重复的 `:root` CSS 变量和 Google Fonts `@import`（已迁移至 `theme.css`）
+- ✅ **演讲者备注功能实现**：
+  - `SlideData` 类型新增 `notes?: string` 字段
+  - `useSlideParser` 新增 `extractNotes()` 函数，解析 `<!-- notes: ... -->` HTML 注释语法，支持单行/多行
+  - 新建 `SpeakerNotes.vue` 底部面板组件，带 slide-up 入场动画
+  - `PresentationView.vue` 绑定 `s` 键切换备注面板显示/隐藏
+  - `demo.md` 中多个幻灯片添加备注示例
+
+### 2026-05-10
+- ✅ Phase 3 完成：CSS 变量主题系统、dark 主题、每页自定义背景色
+- ✅ Phase 2 完成：frontmatter layout 支持，内置 cover/default/two-col/blank 四种布局
+- ✅ Phase 1 完成：MVP 基础可运行版本

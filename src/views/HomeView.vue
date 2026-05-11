@@ -13,6 +13,7 @@ onMounted(async () => {
     loadDemo()
   }
   store.setSlides(slides.value, meta.value)
+  store.initFromHash()
 })
 </script>
 

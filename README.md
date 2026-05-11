@@ -1,126 +1,217 @@
 # web-ppt
 
-用 Markdown 写内容，自动生成 PPT 风格的演示文稿。基于 Vue 3 + Vite 构建，支持代码高亮、KaTeX 数学公式、图片展示。
+用 **Markdown** 写幻灯片，自动生成演示文稿。告别 PowerPoint，专注内容本身。
 
-## 功能特性
+> 写 Markdown → 打开浏览器 → 开始演示
 
-- 📝 **Markdown 驱动** — 用熟悉的 Markdown 语法写幻灯片
-- ⌨️ **键盘导航** — 左右方向键切换页面
-- 🖱️ **滚轮/触摸** — 鼠标滚轮或触摸板滑动切换
-- 🎨 **代码高亮** — 基于 highlight.js，支持 TypeScript / Bash / Python 等
-- 📐 **数学公式** — 基于 KaTeX，支持行内 `$...$` 和块级 `$$...$$`
-- 🖼️ **图片展示** — 支持本地图片和远程图片
-- 📄 **PDF 导出** — 支持将演示文稿导出为 PDF（开发中）
+![Node.js](https://img.shields.io/badge/Node.js-22+-green) ![Vue 3](https://img.shields.io/badge/Vue-3-blue) ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## 分页规则
+---
 
-用 `# H1` 标题触发新页面，每个 H1 标题开启一页：
+## 特色介绍
 
-```markdown
-# 第一页标题
-内容...
+### 🎯 极简工作流
 
-# 第二页标题
-内容...
-```
+用任意编辑器写 Markdown，无需安装任何软件。天然版本控制（Git 友好），可以直接在 GitHub / VS Code 中预览 `.md` 文件。
 
-也支持 `---` 水平线作为备用分隔符。
+### 📦 开箱即用
+
+- `# H1` 自动分页，无需手动切页
+- 代码高亮、数学公式、图片——Markdown 原生支持什么，就展示什么
+- 四种内置布局（封面、默认、双栏、空白），一行 YAML 配置切换
+
+### 🖥️ 演示体验
+
+- **全屏模式** — 按 `F` 键，沉浸式演示
+- **演讲者备注** — 按 `S` 键，仅自己可见的提示内容
+- **PDF 导出** — 按 `P` 键，通过浏览器打印生成多页 PDF
+- **URL 分享** — `/#/3` 直接跳转到指定页码
+
+### 🎨 深度定制
+
+- CSS 变量主题系统，修改几个颜色值即可换肤
+- 每页支持独立背景色和布局
+- 全部源码开源，可自由改造
+
+---
 
 ## 快速开始
 
-### 前置条件
-
-- Node.js >= 20.19.0 或 >= 22.12.0
-- pnpm
-
-### 安装依赖
+### 安装
 
 ```sh
+git clone https://github.com/Sogrey/web-ppt.git
+cd web-ppt
 pnpm install
 ```
 
-### 启动开发服务器
+### 开发
 
 ```sh
 pnpm dev
+# 访问 http://localhost:5173
 ```
 
-访问 `http://localhost:5173` 查看效果。
-
-### 构建生产版本
+### 构建
 
 ```sh
 pnpm build
+# 产物在 dist/ 目录
 ```
 
-构建产物在 `dist/` 目录下。
+---
 
-### 预览生产版本
+## 使用方法
 
-```sh
-pnpm preview
+### 1. 写 Markdown
+
+在 `src/assets/slides/` 下新建 `.md` 文件，或放入 `public/` 目录通过 URL 参数加载。
+
+每个 `# H1` 标题自动变成一页幻灯片：
+
+```markdown
+# 第一页标题
+
+内容...
+
+# 第二页标题
+
+内容...
 ```
 
-## 加载自定义 Markdown 文件
+> 也支持 `---` 水平线作为分页符（与 `#` 等效）
 
-将 `.md` 文件放入 `public/` 目录，然后通过 URL 参数指定：
+### 2. 指定 Markdown 文件
+
+**本地文件** — 将 `.md` 放入 `public/` 目录：
 
 ```
 http://localhost:5173/?md=my-talk.md
 ```
 
-也支持远程 URL：
+**远程文件**：
 
 ```
 http://localhost:5173/?md=https://example.com/slides.md
 ```
 
-不传 `?md=` 参数时，默认使用内置的 `demo.md`。
+**默认文件** — 不传参数时使用内置的 `demo.md`。
+
+### 3. 配置每页样式（可选）
+
+在幻灯片顶部加 YAML frontmatter：
+
+```markdown
+---
+layout: cover          # cover | default | two-col | blank
+background: "#0B0D0F" # 背景色
+label: "01 / 介绍"     # 左上角页签
+---
+
+# 标题
+```
+
+### 4. 添加演讲者备注
+
+在页面内容末尾加 HTML 注释，按 `S` 键查看：
+
+```markdown
+# Vue 3 核心概念
+
+内容...
+
+<!-- notes: 重点讲 Composition API，对比 Options API -->
+```
+
+### 5. 演示快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `←` `→` / 空格 / 回车 | 切换幻灯片 |
+| `F` | 全屏演示 |
+| `S` | 演讲者备注 |
+| `P` | 导出 PDF |
+
+分享时带上页码：`https://yoursite.com/#/3` 打开直接跳到第 3 页。
+
+---
+
+## 功能一览
+
+| 功能 | 说明 |
+|------|------|
+| `# H1` 分页 | 每个 H1 标题自动分页 |
+| `---` 分页 | 水平线也可作为分页符 |
+| 代码高亮 | highlight.js，支持 TS/Bash/Python 等 |
+| 数学公式 | KaTeX，行内 `$x$` 和块级 `$$...$$` |
+| 图片 | 支持本地和远程图片 |
+| 四种布局 | cover / default / two-col / blank |
+| 自定义背景色 | 每页独立背景色 |
+| 键盘导航 | 方向键 / 空格 / 回车 |
+| 滚轮/触摸 | 鼠标滚轮和触摸板滑动 |
+| 全屏模式 | F 键或按钮进入全屏 |
+| 演讲者备注 | S 键呼出，HTML 注释语法 |
+| PDF 导出 | P 键或按钮，浏览器打印生成 |
+| URL 分享 | `/#/N` 直接跳转指定页 |
+| CSS 主题 | CSS 变量，任意换肤 |
+| GitHub Pages | CI/CD 自动部署 |
+
+---
 
 ## 技术栈
 
 | 包 | 用途 |
 |---|---|
 | `marked` | Markdown → HTML |
-| `front-matter` | 解析 frontmatter |
+| `front-matter` | 解析 frontmatter 元数据 |
 | `highlight.js` | 代码语法高亮 |
 | `katex` | 数学公式渲染 |
-| `Vue 3` | 响应式渲染 |
+| `Vue 3` | 组件化响应式 UI |
 | `Pinia` | 状态管理 |
-| `Vite` | 构建工具 |
+| `Vite` | 极速构建工具 |
+
+---
 
 ## 项目结构
 
 ```
-src/
-  assets/slides/     # Markdown 幻灯片文件
-  components/        # Vue 组件（SlideItem / PresentationView / NavDots / ProgressBar）
-  composables/       # 组合式函数（useSlideParser / useSlideNav / useMdLoader）
-  stores/            # Pinia 状态管理（slideStore）
-  views/             # 页面视图（HomeView）
+web-ppt/
+├── public/               # 静态文件（放自定义 .md）
+├── src/
+│   ├── assets/
+│   │   ├── slides/       # 内置示例幻灯片（demo.md）
+│   │   └── styles/        # CSS（theme.css / print.css）
+│   ├── components/
+│   │   ├── PresentationView.vue  # 主容器
+│   │   ├── SlideItem.vue         # 单页幻灯片
+│   │   ├── NavDots.vue           # 右侧导航圆点
+│   │   ├── ProgressBar.vue       # 底部进度条
+│   │   └── SpeakerNotes.vue      # 演讲者备注面板
+│   ├── composables/
+│   │   ├── useSlideParser.ts     # Markdown 解析
+│   │   ├── useSlideNav.ts        # 导航交互
+│   │   └── useMdLoader.ts        # 文件加载
+│   ├── stores/
+│   │   └── slideStore.ts         # Pinia 状态管理
+│   ├── types/
+│   │   └── slide.ts             # 类型定义
+│   └── views/
+│       └── HomeView.vue          # 首页入口
+└── .github/workflows/
+    └── deploy.yml          # GitHub Pages 自动部署
 ```
 
-## GitHub Pages 部署
+---
+
+## 部署
 
 推送到 `main` 分支后，GitHub Actions 自动构建并部署到 GitHub Pages：
 
 ```
-https://<username>.github.io/web-ppt/
+https://Sogrey.github.io/web-ppt/
 ```
 
-部署配置文件：`.github/workflows/deploy.yml`
-
-## 开发计划
-
-- [x] Markdown 解析
-- [x] 键盘/滚轮导航
-- [x] 进度条
-- [x] 代码高亮
-- [x] 数学公式渲染
-- [ ] 布局系统（cover / two-col / blank）
-- [ ] 主题定制
-- [ ] PDF 导出
-- [ ] 过渡动画
+---
 
 ## License
 

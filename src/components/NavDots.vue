@@ -34,14 +34,14 @@ const store = useSlideStore()
   height: 6px;
   border-radius: 50%;
   border: none;
-  background: var(--dim, #4a525c);
+  background: var(--dim);
   cursor: pointer;
   padding: 0;
   transition: all 0.3s;
 }
 
 .dot.active {
-  background: var(--accent, #58e1c1);
+  background: var(--accent);
   transform: scale(1.5);
 }
 

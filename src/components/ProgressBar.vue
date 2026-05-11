@@ -14,7 +14,7 @@ const store = useSlideStore()
   bottom: 0;
   left: 0;
   height: 2px;
-  background: var(--accent, #58e1c1);
+  background: var(--accent);
   transition: width 0.75s cubic-bezier(0.77, 0, 0.175, 1);
   z-index: 100;
 }

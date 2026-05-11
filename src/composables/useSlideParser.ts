@@ -130,13 +130,38 @@ function extractTitle(md: string): string {
   return match ? (match[1] ?? '') : ''
 }
 
+/**
+ * Extract speaker notes from `<!-- notes: ... -->` HTML comments.
+ * Supports single-line and multi-line comments.
+ * Removes notes comments from markdown body (they won't render on the slide).
+ */
+function extractNotes(body: string): { notes: string | undefined; cleanBody: string } {
+  const noteContents: string[] = []
+  const cleanBody = body.replace(/<!--([\s\S]*?)-->/gi, (match, content: string) => {
+    const trimmed = content.trim()
+    // Detect "notes" or "note" at the start of the comment (case-insensitive)
+    if (/^notes?\b/i.test(trimmed)) {
+      const noteText = trimmed.replace(/^notes?\s*:?\s*/i, '').trim()
+      if (noteText) noteContents.push(noteText)
+      return ''
+    }
+    // Keep non-notes HTML comments (marked will pass them through)
+    return match
+  })
+
+  const notes = noteContents.length > 0 ? noteContents.join('\n\n') : undefined
+  const trimmed = cleanBody.trim()
+  return { notes, cleanBody: trimmed || body }
+}
+
 function parseBlock(raw: string, index: number): SlideData {
   const { attributes, body } = fm(raw)
   const frontmatter = attributes as SlideFrontmatter
-  const title = extractTitle(body)
-  const html = renderMathInHtml(marked.parse(body) as string)
+  const { notes, cleanBody } = extractNotes(body)
+  const title = extractTitle(cleanBody)
+  const html = renderMathInHtml(marked.parse(cleanBody) as string)
 
-  return { index, title, html, frontmatter, rawMarkdown: raw }
+  return { index, title, html, frontmatter, rawMarkdown: raw, notes }
 }
 
 export function parseMarkdown(rawContent: string): {

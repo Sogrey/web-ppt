@@ -24,6 +24,22 @@ export const useSlideStore = defineStore('slide', () => {
     currentIndex.value = index
   }
 
+  /**
+   * Read initial slide index from URL hash on page load.
+   * Supports formats: /#/3  →  index 2 (1-based to 0-based)
+   * No hash or invalid hash → index 0
+   */
+  function initFromHash() {
+    const hash = window.location.hash ?? ''
+    const match = hash.match(/^#\/(\d+)$/)
+    if (match && match[1] !== undefined) {
+      const target = parseInt(match[1], 10) - 1
+      if (target >= 0 && target < total.value) {
+        currentIndex.value = target
+      }
+    }
+  }
+
   function next() {
     goTo(currentIndex.value + 1)
   }
@@ -41,6 +57,7 @@ export const useSlideStore = defineStore('slide', () => {
     progress,
     setSlides,
     goTo,
+    initFromHash,
     next,
     prev,
   }

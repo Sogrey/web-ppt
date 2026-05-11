@@ -1,17 +1,98 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useSlideStore } from '@/stores/slideStore'
 import { useSlideNav } from '@/composables/useSlideNav'
 import SlideItem from './SlideItem.vue'
 import NavDots from './NavDots.vue'
 import ProgressBar from './ProgressBar.vue'
+import SpeakerNotes from './SpeakerNotes.vue'
 
 const store = useSlideStore()
 const { tryGo } = useSlideNav()
 
+const showNotes = ref(false)
+const isFullscreen = ref(false)
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {})
+  } else {
+    document.exitFullscreen().catch(() => {})
+  }
+}
+
+function onFullscreenChange() {
+  isFullscreen.value = !!document.fullscreenElement
+}
+
+function onKeydown(e: KeyboardEvent) {
+  const target = e.target as HTMLElement
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') return
+
+  if (e.key === 's' || e.key === 'S') {
+    showNotes.value = !showNotes.value
+  }
+  if (e.key === 'f' || e.key === 'F') {
+    toggleFullscreen()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+  document.addEventListener('fullscreenchange', onFullscreenChange)
+})
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKeydown)
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
+})
+
 const trackStyle = computed(() => ({
   transform: `translateX(-${store.currentIndex * 100}vw)`,
 }))
+
+function handlePrint() {
+  const track = document.querySelector<HTMLElement>('.track')
+  const slides = document.querySelectorAll<HTMLElement>('.slide-item')
+  const isPrintingClass = 'is-printing'
+
+  // 1. 标记 body，辅助 CSS 匹配
+  document.body.classList.add(isPrintingClass)
+
+  // 2. 强制 track 变为竖向堆叠（最高优先级：内联样式）
+  if (track) {
+    track.style.cssText += ';display:block!important;width:100%!important;height:auto!important;transform:none!important;flex-direction:unset!important;'
+  }
+
+  // 3. 强制每张 slide 分页
+  slides.forEach((el, i) => {
+    el.style.cssText += `;display:block!important;width:100%!important;height:100vh!important;overflow:hidden!important;page-break-after:always!important;break-after:always!important;`
+    if (i === slides.length - 1) {
+      el.style.pageBreakAfter = 'auto'
+      el.style.breakAfter = 'auto'
+    }
+  })
+
+  // 4. 监听打印结束，恢复样式
+  const restore = () => {
+    document.body.classList.remove(isPrintingClass)
+    if (track) {
+      track.style.cssText = track.style.cssText
+        .replace(/display\s*:\s*block\s*!important/i, '')
+        .replace(/width\s*:\s*100%\s*!important/i, '')
+        .replace(/height\s*:\s*auto\s*!important/i, '')
+        .replace(/transform\s*:\s*none\s*!important/i, '')
+    }
+    slides.forEach(el => {
+      el.style.pageBreakAfter = ''
+      el.style.breakAfter = ''
+    })
+    window.removeEventListener('afterprint', restore)
+  }
+  window.addEventListener('afterprint', restore)
+
+  // 5. 触发打印
+  window.print()
+}
 </script>
 
 <template>
@@ -39,6 +120,34 @@ const trackStyle = computed(() => ({
     >
       下一屏 →
     </button>
+
+    <!-- 左上角全屏按钮 -->
+    <button class="fullscreen-btn" @click="toggleFullscreen" :title="isFullscreen ? '退出全屏 (F)' : '全屏演示 (F)'">
+      <!-- 全屏图标 -->
+      <svg v-if="!isFullscreen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+      </svg>
+      <!-- 退出全屏图标 -->
+      <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+      </svg>
+      {{ isFullscreen ? '退出' : '全屏' }}
+    </button>
+
+    <!-- 右上角导出 PDF 按钮 -->
+    <button class="print-btn" @click="handlePrint" title="导出 PDF">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+      导出 PDF
+    </button>
+
+    <!-- 演讲者备注面板 -->
+    <Transition name="notes-fade">
+      <SpeakerNotes v-if="showNotes" />
+    </Transition>
   </div>
 </template>
 
@@ -68,7 +177,7 @@ const trackStyle = computed(() => ({
   gap: 10px;
   font-family: 'DM Mono', monospace;
   font-size: 11px;
-  color: var(--dim, #4a525c);
+  color: var(--dim);
   letter-spacing: 0.1em;
   cursor: pointer;
   transition: color 0.3s;
@@ -78,7 +187,69 @@ const trackStyle = computed(() => ({
 }
 
 .arrow-hint:hover {
-  color: var(--accent, #58e1c1);
+  color: var(--accent);
+}
+
+/* ── 全屏按钮 ── */
+.fullscreen-btn {
+  position: fixed;
+  top: 24px;
+  left: 28px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  z-index: 200;
+}
+
+.fullscreen-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(88, 225, 193, 0.06);
+}
+
+.fullscreen-btn svg {
+  flex-shrink: 0;
+}
+
+/* ── 导出 PDF 按钮 ── */
+.print-btn {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--dim);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 7px 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  z-index: 200;
+}
+
+.print-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(88, 225, 193, 0.06);
+}
+
+.print-btn svg {
+  flex-shrink: 0;
 }
 
 /* 移动端：竖向滚动降级 */
@@ -98,5 +269,22 @@ const trackStyle = computed(() => ({
   .arrow-hint {
     display: none;
   }
+  .print-btn {
+    display: none;
+  }
+  .fullscreen-btn {
+    display: none;
+  }
+}
+
+/* 演讲者备注面板过渡动画 */
+.notes-fade-enter-active,
+.notes-fade-leave-active {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.notes-fade-enter-from,
+.notes-fade-leave-to {
+  transform: translateY(20px);
+  opacity: 0;
 }
 </style>
