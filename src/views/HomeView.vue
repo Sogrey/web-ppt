@@ -5,13 +5,10 @@ import { useMdLoader } from '@/composables/useMdLoader'
 import PresentationView from '@/components/PresentationView.vue'
 
 const store = useSlideStore()
-const { loading, error, slides, meta, loadFromUrl, loadDemo } = useMdLoader()
+const { loading, error, slides, meta, loadFromUrl } = useMdLoader()
 
 onMounted(async () => {
-  const loaded = await loadFromUrl()
-  if (!loaded) {
-    loadDemo()
-  }
+  await loadFromUrl()
   store.setSlides(slides.value, meta.value)
   store.initFromHash()
 })

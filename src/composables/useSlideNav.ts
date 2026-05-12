@@ -7,6 +7,35 @@ const WHEEL_DEBOUNCE_MS = 60
 const TOUCH_THRESHOLD = 60
 const TRANSITION_LOCK_MS = 800
 
+/**
+ * 检查当前显示的幻灯片是否可以滚动，以及滚动位置
+ */
+function getCurrentSlideScrollInfo(currentIndex: number): {
+  canScrollUp: boolean
+  canScrollDown: boolean
+} {
+  // 获取所有幻灯片，找到当前显示的那个
+  const slides = document.querySelectorAll('.slide-item')
+  const currentSlide = slides[currentIndex] as HTMLElement | undefined
+
+  if (!currentSlide) {
+    return { canScrollUp: false, canScrollDown: false }
+  }
+
+  // 检查当前幻灯片是否可滚动（内容高度 > 视口高度）
+  const { scrollTop, scrollHeight, clientHeight } = currentSlide
+  const isScrollable = scrollHeight > clientHeight
+
+  if (!isScrollable) {
+    return { canScrollUp: false, canScrollDown: false }
+  }
+
+  const canScrollUp = scrollTop > 0
+  const canScrollDown = scrollTop + clientHeight < scrollHeight - 1 // -1 for floating point tolerance
+
+  return { canScrollUp, canScrollDown }
+}
+
 export function useSlideNav() {
   const store = useSlideStore()
 
@@ -44,6 +73,20 @@ export function useSlideNav() {
   let wheelTimer: ReturnType<typeof setTimeout> | null = null
   function onWheel(e: WheelEvent) {
     if (window.innerWidth <= MOBILE_BREAKPOINT) return
+
+    const { canScrollUp, canScrollDown } = getCurrentSlideScrollInfo(store.currentIndex)
+
+    // 如果内容可以滚动，优先让内容滚动
+    if (e.deltaY > 0 && canScrollDown) {
+      // 向下滚动，但内容还没到底，不翻页，让默认滚动行为执行
+      return
+    }
+    if (e.deltaY < 0 && canScrollUp) {
+      // 向上滚动，但内容还没到顶，不翻页，让默认滚动行为执行
+      return
+    }
+
+    // 内容已滚动到边界，或无需滚动，执行翻页
     e.preventDefault()
     wheelAccum += e.deltaY || e.deltaX
     if (wheelTimer) clearTimeout(wheelTimer)

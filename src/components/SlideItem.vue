@@ -1,19 +1,32 @@
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import type { SlideData } from '@/types/slide'
 
 const props = defineProps<{ slide: SlideData }>()
 
 const layout = props.slide.frontmatter.layout ?? 'default'
+const slideRef = ref<HTMLElement>()
+const isScrollable = ref(false)
+
+function checkScrollable() {
+  if (!slideRef.value) return
+  isScrollable.value = slideRef.value.scrollHeight > slideRef.value.clientHeight
+}
+
+onMounted(() => {
+  checkScrollable()
+  window.addEventListener('resize', checkScrollable)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', checkScrollable)
+})
 </script>
 
 <template>
-  <section
-    class="slide-item"
-    :class="`layout-${layout}`"
-    :style="props.slide.frontmatter.background
-      ? { background: props.slide.frontmatter.background }
-      : {}"
-  >
+  <section ref="slideRef" class="slide-item" :class="[`layout-${layout}`, { 'is-scrollable': isScrollable }]" :style="props.slide.frontmatter.background
+    ? { background: props.slide.frontmatter.background }
+    : {}">
     <!-- 网格背景装饰 -->
     <div class="grid-bg" aria-hidden="true" />
 
@@ -37,6 +50,37 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   position: relative;
   overflow: hidden;
   background: var(--bg);
+}
+
+.slide-item.is-scrollable {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: auto;
+  min-height: 100vh;
+  align-items: flex-start;
+}
+
+.slide-item.is-scrollable .slide-content {
+  padding-top: 20px;
+  padding-bottom: 60px;
+}
+
+/* 隐藏滚动条但保持功能 */
+.slide-item.is-scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.slide-item.is-scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.slide-item.is-scrollable::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 3px;
+}
+
+.slide-item.is-scrollable::-webkit-scrollbar-thumb:hover {
+  background: var(--dim);
 }
 
 .grid-bg {
@@ -72,6 +116,7 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   align-items: center;
   justify-content: center;
 }
+
 .layout-default .slide-content {
   max-width: 900px;
   width: 100%;
@@ -84,10 +129,12 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   justify-content: center;
   text-align: center;
 }
+
 .layout-cover .slide-content {
   max-width: 1100px;
   width: 100%;
 }
+
 .layout-cover .slide-content :deep(h1) {
   font-size: clamp(52px, 7vw, 96px);
   font-weight: 900;
@@ -95,6 +142,7 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   letter-spacing: -0.04em;
   margin-bottom: 24px;
 }
+
 .layout-cover .slide-content :deep(p) {
   font-size: clamp(16px, 2vw, 24px);
   font-weight: 300;
@@ -109,6 +157,7 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   justify-content: center;
   gap: 60px;
 }
+
 .layout-two-col .slide-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -117,6 +166,7 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   width: 100%;
   align-items: start;
 }
+
 .layout-two-col .slide-content :deep(h2) {
   grid-column: 1 / -1;
 }
@@ -126,6 +176,7 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   /* 不设置 align-items/justify-content，内容自由定位 */
   padding: 0;
 }
+
 .layout-blank .slide-content {
   width: 100%;
   height: 100%;
@@ -289,10 +340,12 @@ const layout = props.slide.frontmatter.layout ?? 'default'
   .slide-item {
     padding: 64px 24px 48px;
   }
+
   .slide-item.layout-two-col .slide-content {
     grid-template-columns: 1fr;
     gap: 32px;
   }
+
   .screen-label {
     left: 24px;
   }
